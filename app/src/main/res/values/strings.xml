@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AppCloner</string>
+    <string name="pick_installed_app">Pick Installed App</string>
+    <string name="pick_apk">Select APK File</string>
+</resources>
