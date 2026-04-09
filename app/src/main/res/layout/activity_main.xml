@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:animateLayoutChanges="true">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -22,6 +23,9 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="@string/pick_installed_app"
+        app:icon="@android:drawable/ic_menu_view"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
         app:cornerRadius="12dp"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
         android:layout_marginTop="64dp" />
@@ -32,8 +36,69 @@
         android:layout_height="60dp"
         android:text="@string/pick_apk"
         style="@style/Widget.Material3.Button.TonalButton"
+        app:icon="@android:drawable/ic_menu_upload"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
         app:cornerRadius="12dp"
         app:layout_constraintTop_toBottomOf="@id/btnPickInstalled"
         android:layout_marginTop="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnHistory"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Clone History"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        app:icon="@android:drawable/ic_menu_recent_history"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        app:cornerRadius="12dp"
+        app:layout_constraintTop_toBottomOf="@id/btnPickApk"
+        android:layout_marginTop="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSettings"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Settings"
+        style="@style/Widget.Material3.Button.TextButton"
+        app:icon="@android:drawable/ic_menu_manage"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Fullscreen overlay progress for file operations -->
+    <LinearLayout
+        android:id="@+id/overlayProgressMain"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@color/overlay_background"
+        android:clickable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:padding="24dp">
+
+        <ProgressBar
+            android:id="@+id/mainProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
+        <TextView
+            android:id="@+id/tvMainProgressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Processing..."
+            android:layout_marginTop="8dp"
+            android:textColor="?android:attr/textColorPrimary" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

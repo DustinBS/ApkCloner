@@ -3,13 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:background="?attr/colorSurface"
+    android:padding="24dp"
+    android:animateLayoutChanges="true">
 
     <TextView
         android:id="@+id/tvHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Selected APK"
+        android:text="Selected APK Configuration"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
@@ -21,6 +24,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/tvHeader"
         android:layout_marginTop="16dp"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
         app:cardElevation="2dp"
         app:cardCornerRadius="12dp">
         <TextView
@@ -28,16 +32,114 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
+            android:textStyle="italic"
             android:textSize="14sp"
-            android:background="#10000000"
-            android:textColor="#555" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tvTargetAppName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New App Name:"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/cardPath"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutAppName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tvTargetAppName"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etTargetAppName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Cloned App"
+            android:textColor="?android:attr/textColorPrimary" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tvTargetPackage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Target Package Name:"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/layoutAppName"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutPackageName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tvTargetPackage"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etTargetPackage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="com.example.clone"
+            android:textColor="?android:attr/textColorPrimary" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/layoutPackageName"
+        android:layout_marginTop="24dp"
+        android:animateLayoutChanges="true">
+        
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"/>
+            
+        <TextView
+            android:id="@+id/tvProgressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Repack running in background — you may close the app. Return here to view progress."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:textAlignment="center"/>
+    </LinearLayout>
+    
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnViewDownloads"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/open_output_folder"
+        android:visibility="gone"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:contentDescription="@string/view_in_folder"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toTopOf="@id/btnRepack"
+        android:layout_marginBottom="8dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRepack"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="Extract &amp; Clone"
+        android:contentDescription="@string/clone_again"
         app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="32dp"/>

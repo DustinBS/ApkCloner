@@ -3,4 +3,11 @@
     <string name="app_name">AppCloner</string>
     <string name="pick_installed_app">Pick Installed App</string>
     <string name="pick_apk">Select APK File</string>
+    <string name="app_icon">App icon</string>
+    <string name="view_in_folder">View in folder</string>
+    <string name="clone_again">Clone Again</string>
+    <string name="app_info">App info</string>
+    <string name="action_settings">Settings</string>
+    <string name="view_output">View output</string>
+    <string name="open_output_folder">Open output folder</string>
 </resources>

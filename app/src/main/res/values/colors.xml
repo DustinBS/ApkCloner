@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Use a robust Color scheme that guarantees good contrast ratio (WCAG AA over 4.5:1) -->
+    <color name="primary_light">#0D47A1</color>
+    <color name="on_primary_light">#FFFFFF</color>
+    <color name="primary_container_light">#D8E2FF</color>
+    <color name="on_primary_container_light">#001A41</color>
+    
+    <color name="surface_light">#FDFBFF</color>
+    <color name="on_surface_light">#1A1C1E</color>
+    <color name="surface_variant_light">#E1E2EC</color>
+    <color name="on_surface_variant_light">#44474E</color>
+
+    <color name="primary_dark">#AEC6FF</color>
+    <color name="on_primary_dark">#002E69</color>
+    <color name="primary_container_dark">#004494</color>
+    <color name="on_primary_container_dark">#D8E2FF</color>
+
+    <color name="surface_dark">#1A1C1E</color>
+    <color name="on_surface_dark">#E2E2E6</color>
+    <color name="surface_variant_dark">#44474E</color>
+    <color name="on_surface_variant_dark">#C4C6D0</color>
+    <!-- Overlay used for progress screens -->
+    <color name="overlay_background">#80000000</color>
+</resources>

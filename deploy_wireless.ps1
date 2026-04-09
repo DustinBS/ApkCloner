@@ -6,6 +6,12 @@ param(
     [string]$PairAddress,
     [Parameter(Mandatory=$false)]
     [string]$ConnectAddress,
+    [Parameter(Mandatory=$false)]
+    [string]$PairingCode,
+    [Parameter(Mandatory=$false)]
+    [switch]$UseQR,
+    [Parameter(Mandatory=$false)]
+    [string]$QrData,
     [switch]$RunDeploy,
     [switch]$Help
 )
@@ -13,12 +19,20 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Show-Usage {
-    Write-Host ""
-    Write-Host "Usage:" -ForegroundColor Cyan
-    Write-Host "  .\deploy_wireless.ps1 [-PairAddress <ip:port>] [-ConnectAddress <ip:port>] [-RunDeploy] [-Help]" -ForegroundColor Cyan
-    Write-Host "" 
-    Write-Host "Examples:" -ForegroundColor Cyan
-    Write-Host "  .\deploy_wireless.ps1 -PairAddress 192.168.1.47:40109 -ConnectAddress 192.168.1.47:43061 -RunDeploy" -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host 'Usage:' -ForegroundColor Cyan
+    Write-Host '  .\deploy_wireless.ps1 [-PairAddress <ip:port>] [-PairingCode <code>] [-ConnectAddress <ip:port>] [-RunDeploy]' -ForegroundColor Cyan
+    Write-Host '  .\deploy_wireless.ps1 -UseQR [-QrData "<paste QR text>"] [-ConnectAddress <ip:port>] [-RunDeploy]' -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host 'Notes:' -ForegroundColor Cyan
+    Write-Host '  - PairAddress is the address shown in the phone pairing dialog (format ip:port, e.g. 192.168.1.47:40109).' -ForegroundColor Cyan
+    Write-Host '  - After pairing, the phone shows a NEW IP:PORT on the Wireless debugging main screen - use that as ConnectAddress (often the port changes).' -ForegroundColor Cyan
+    Write-Host '  - If you use -UseQR, scan the QR code on your phone from another device and paste the decoded text via -QrData or when prompted.' -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host 'Examples:' -ForegroundColor Cyan
+    Write-Host '  .\deploy_wireless.ps1 -PairAddress 192.168.1.47:40109 -PairingCode 123456 -ConnectAddress 192.168.1.47:43061 -RunDeploy' -ForegroundColor Cyan
+    Write-Host '  .\deploy_wireless.ps1 -UseQR -QrData "adb pair 192.168.1.47:40109 123456" -RunDeploy' -ForegroundColor Cyan
+    Write-Host ''
 }
 
 if ($Help) {
@@ -39,6 +53,52 @@ function Get-AdbPath {
 
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return $null
+}
+
+# Utility: parse QR/pasted text for pair address and code
+function Parse-QRText {
+    param([string]$text)
+    $res = @{ PairAddress = $null; PairingCode = $null }
+    if ([string]::IsNullOrWhiteSpace($text)) { return $res }
+    if ($text -match 'adb\s+pair\s+([0-9]{1,3}(?:\.[0-9]{1,3}){3}:\d{1,5})(?:\s+(\d{4,8}))?') {
+        $res.PairAddress = $matches[1]
+        if ($matches[2]) { $res.PairingCode = $matches[2] }
+        return $res
+    }
+    $ipPortPattern = '([0-9]{1,3}(?:\.[0-9]{1,3}){3}:\d{1,5})'
+    if ($text -match $ipPortPattern) { $res.PairAddress = $matches[1] }
+    if ($text -match '\b([0-9]{4,8})\b') {
+        $num = $matches[1]
+        if (-not ($res.PairAddress -and $res.PairAddress -match [regex]::Escape($num))) {
+            $res.PairingCode = $num
+        }
+    }
+    return $res
+}
+
+function Validate-IpPort {
+    param([string]$addr)
+    if ([string]::IsNullOrWhiteSpace($addr)) { return $false }
+    if ($addr -notmatch '^([0-9]{1,3}\.){3}[0-9]{1,3}:\d{1,5}$') { return $false }
+    $parts = $addr.Split(':')
+    $ip = $parts[0]; $port = [int]$parts[1]
+    $octets = $ip.Split('.')
+    foreach ($o in $octets) { if ([int]$o -lt 0 -or [int]$o -gt 255) { return $false } }
+    if ($port -lt 1 -or $port -gt 65535) { return $false }
+    return $true
+}
+
+function Get-IpPortFromAdbDevices {
+    param([string]$adbPath)
+    $out = & "$adbPath" devices 2>&1 | Out-String
+    $lines = $out -split '\r?\n' | Select-Object -Skip 1
+    $found = @()
+    foreach ($l in $lines) {
+        if ($l -match '^\s*([0-9]{1,3}(?:\.[0-9]{1,3}){3}:\d{1,5})\s+(\w+)') {
+            $found += @{ Address = $matches[1]; State = $matches[2]; Raw = $l }
+        }
+    }
+    return $found
 }
 
 $adb = Get-AdbPath

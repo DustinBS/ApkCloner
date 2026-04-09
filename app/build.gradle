@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 36
@@ -37,6 +38,28 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.activity:activity-ktx:1.8.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    // WorkManager for background repack jobs
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    
+    // On-device AXML editing
+    implementation 'com.github.REAndroid:ARSCLib:V1.3.8'
+    
+    // Official Android APK Signing Library (can run on Android)
+    implementation 'com.android.tools.build:apksig:8.2.0'
+    
+    // BouncyCastle for cert generation
+    implementation 'org.bouncycastle:bcpkix-jdk15to18:1.76'
+
+    // UI Dependencies
+    implementation 'com.google.android.flexbox:flexbox:3.0.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+    
+    // Room for Database (History)
+    implementation "androidx.room:room-runtime:2.6.1"
+    implementation "androidx.room:room-ktx:2.6.1"
+    kapt "androidx.room:room-compiler:2.6.1"
+    
     testImplementation 'junit:junit:4.13.2'
 }
 

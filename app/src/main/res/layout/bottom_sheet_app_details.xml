@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:padding="24dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <!-- Grabber/Handle -->
+    <View
+        android:id="@+id/handle"
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:background="#D1D5DB"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <!-- Header Section -->
+    <ImageView
+        android:id="@+id/ivAppIcon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/rounded_bg"
+        android:clipToOutline="true"
+        android:contentDescription="@string/app_icon"
+        android:src="@mipmap/ic_launcher"
+        app:layout_constraintTop_toBottomOf="@id/handle"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <TextView
+        android:id="@+id/tvAppName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="App Name"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toRightOf="@id/ivAppIcon"
+        app:layout_constraintRight_toLeftOf="@id/btnAppInfo"
+        app:layout_constraintTop_toTopOf="@id/ivAppIcon" />
+
+    <ImageButton
+        android:id="@+id/btnAppInfo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/app_info"
+        android:src="@android:drawable/ic_menu_info_details"
+        app:tint="?attr/colorOnSurfaceVariant"
+        app:layout_constraintTop_toTopOf="@id/ivAppIcon"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <TextView
+        android:id="@+id/tvPackageName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="2"
+        android:text="com.example.package"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textIsSelectable="true"
+        android:textSize="13sp"
+        app:layout_constraintLeft_toRightOf="@id/ivAppIcon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAppName" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipApiBadge"
+        style="@style/Widget.Material3.Chip.Suggestion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:clickable="false"
+        android:text="API 35"
+        android:textColor="?attr/colorPrimary"
+        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+        app:chipStrokeWidth="0dp"
+        app:chipMinHeight="24dp"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="@id/ivAppIcon"
+        app:layout_constraintLeft_toRightOf="@id/ivAppIcon" />
+
+    <View
+        android:id="@+id/divider1"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="24dp"
+        android:background="#E5E7EB"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivAppIcon" />
+
+    <!-- Info Grid using simple linear layouts for perfect align -->
+    <LinearLayout
+        android:id="@+id/gridInfo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1">
+
+        <!-- Row 1 -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="2">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Version" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1.0" android:textSize="14sp" android:textColor="#111827" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Source Installer" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvInstaller" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Google Play Store" android:textSize="14sp" android:textColor="#111827" android:ellipsize="end" android:maxLines="1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 2 -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="2" android:layout_marginTop="16dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Minimum API" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvMinApi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Android 7.0" android:textSize="14sp" android:textColor="#111827" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Target API" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvTargetApi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Android 15" android:textSize="14sp" android:textColor="#111827" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 3 -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="2" android:layout_marginTop="16dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Installed" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvInstalledDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2023-10-01" android:textSize="14sp" android:textColor="#111827" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                <TextView android:text="Last Updated" android:textSize="12sp" android:textColor="#6B7280" android:textStyle="bold"/>
+                <TextView android:id="@+id/tvUpdatedDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2023-10-05" android:textSize="14sp" android:textColor="#111827" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/scrollChips"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/gridInfo">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPermissions"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Permissions (0)" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipActivities"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Activities (0)" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipServices"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Services (0)" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipProviders"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Providers (0)" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Bottom Actions -->
+    <LinearLayout
+        android:id="@+id/actionContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/scrollChips">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLaunchApp"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Launch" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloneApp"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Extract &amp; Clone" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
