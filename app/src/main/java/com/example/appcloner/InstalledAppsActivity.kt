@@ -53,7 +53,12 @@ class InstalledAppsActivity : AppCompatActivity() {
             },
             onSettingsClick = { appInfo ->
                 val bottomSheet = AppDetailsBottomSheet.newInstance(appInfo.packageName)
-                bottomSheet.show(supportFragmentManager, bottomSheet.tag)
+                try {
+                    bottomSheet.show(supportFragmentManager, "app_details_${appInfo.packageName}")
+                } catch (e: IllegalStateException) {
+                    e.printStackTrace()
+                    supportFragmentManager.beginTransaction().add(bottomSheet, "app_details_${appInfo.packageName}").commitAllowingStateLoss()
+                }
             }
         )
 
@@ -142,7 +147,12 @@ class InstalledAppsActivity : AppCompatActivity() {
             holder.binding.root.setOnClickListener {
                 onClick(app)
             }
-            
+
+            holder.binding.root.setOnLongClickListener {
+                onSettingsClick(app)
+                true
+            }
+
             holder.binding.btnSettings.setOnClickListener {
                 onSettingsClick(app)
             }

@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import com.example.appcloner.RepackHelper.RepackException
+import com.example.appcloner.JobListActivity
 
 class RepackActivity : AppCompatActivity() {
 
@@ -34,10 +35,20 @@ class RepackActivity : AppCompatActivity() {
         setContentView(binding.root)
         appSettings = AppSettings(this)
 
-        val apkPath = intent.getStringExtra(AppConstants.APK_PATH_EXTRA)
+        val apkArray = intent.getStringArrayListExtra(AppConstants.APK_PATH_EXTRA)
+        val apkPathSingle = intent.getStringExtra(AppConstants.APK_PATH_EXTRA)
+        val apkPaths = when {
+            apkArray != null && apkArray.isNotEmpty() -> apkArray
+            apkPathSingle != null -> arrayListOf(apkPathSingle)
+            else -> arrayListOf()
+        }
         val originalPackage = intent.getStringExtra(AppConstants.SELECTED_PACKAGE_EXTRA) ?: "unknown.package"
-        
-        binding.tvApkPath.text = apkPath?.let { File(it).name } ?: "No APK selected"
+
+        binding.tvApkPath.text = when {
+            apkPaths.isEmpty() -> getString(com.example.appcloner.R.string.no_apk_selected)
+            apkPaths.size == 1 -> File(apkPaths[0]).name
+            else -> "${apkPaths.size} APKs selected"
+        }
         
         val segments = originalPackage.split(".")
         val defaultPackageName = if (segments.size > 1) {
@@ -47,18 +58,18 @@ class RepackActivity : AppCompatActivity() {
         }
         binding.etTargetPackage.setText(defaultPackageName)
         
-        binding.layoutPackageName.helperText = "Warning: Modifying core package name may break apps relying on strict signatures."
+        binding.layoutPackageName.helperText = getString(com.example.appcloner.R.string.warning_modify_package)
 
         binding.btnRepack.setOnClickListener {
-            if (apkPath == null) {
-                Snackbar.make(binding.root, "No APK path provided", Snackbar.LENGTH_LONG).show()
+            if (apkPaths.isEmpty()) {
+                com.example.appcloner.util.UiUtils.showSnack(binding.root, getString(com.example.appcloner.R.string.no_apk_path_provided), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                 return@setOnClickListener
             }
 
-            val targetPackage = binding.etTargetPackage.text.toString().takeIf { it.isNotEmpty() } ?: "com.example.clone"
-            val targetAppName = binding.etTargetAppName.text.toString().takeIf { it.isNotEmpty() } ?: "Cloned App"
+            val targetPackage = binding.etTargetPackage.text.toString().takeIf { it.isNotEmpty() } ?: getString(com.example.appcloner.R.string.default_clone_package)
+            val targetAppName = binding.etTargetAppName.text.toString().takeIf { it.isNotEmpty() } ?: getString(com.example.appcloner.R.string.cloned_app_hint)
 
-            // Enqueue background WorkManager job so repack continues if user leaves the activity
+            // Immediate UI feedback
             binding.btnRepack.isEnabled = false
             binding.layoutProgress.visibility = android.view.View.VISIBLE
             binding.btnViewDownloads.visibility = android.view.View.GONE
@@ -66,57 +77,99 @@ class RepackActivity : AppCompatActivity() {
             val cleanFileName = targetPackage.replace(Regex("[^a-zA-Z0-9.\\-]"), "_")
 
             val input = workDataOf(
-                RepackWorker.KEY_APK_PATH to (apkPath),
+                RepackWorker.KEY_APK_PATH to apkPaths.toTypedArray(),
                 RepackWorker.KEY_TARGET_PACKAGE to targetPackage,
                 RepackWorker.KEY_TARGET_APP_NAME to targetAppName,
                 RepackWorker.KEY_CUSTOM_URI to appSettings.customOutputFolderUri,
                 RepackWorker.KEY_ORIGINAL_PACKAGE to originalPackage
             )
 
-            val request = OneTimeWorkRequestBuilder<RepackWorker>()
-                .setInputData(input)
-                .build()
+            lifecycleScope.launch {
+                val wm = WorkManager.getInstance(applicationContext)
 
-            WorkManager.getInstance(this)
-                .enqueueUniqueWork("repack_$cleanFileName", ExistingWorkPolicy.REPLACE, request)
-
-            // Observe work progress and completion
-            WorkManager.getInstance(this).getWorkInfoByIdLiveData(request.id).observe(this, Observer { info ->
-                if (info == null) return@Observer
-                val progress = info.progress.getInt("progress", 0)
-                when {
-                    info.state.isFinished -> {
-                        binding.layoutProgress.visibility = android.view.View.GONE
-                        binding.btnRepack.isEnabled = true
-                        binding.btnRepack.text = "Clone Again"
-                        val output = info.outputData.getString(RepackWorker.KEY_OUTPUT_PATH)
-                        if (!output.isNullOrEmpty()) {
-                            // Show view downloads if custom URI provided
-                            if (!appSettings.customOutputFolderUri.isNullOrEmpty()) {
-                                binding.btnViewDownloads.visibility = android.view.View.VISIBLE
-                                binding.btnViewDownloads.setOnClickListener {
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        data = Uri.parse(appSettings.customOutputFolderUri)
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    }
-                                    if (intent.resolveActivity(packageManager) != null) startActivity(intent)
-                                    else com.google.android.material.snackbar.Snackbar.make(binding.root, "No file manager found.", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
-                                }
-                            }
-
-                            if (appSettings.installImmediately) {
-                                // Try to install internal output file
-                                val outFile = File(filesDir, "$cleanFileName.apk")
-                                installApk(outFile)
-                            }
-                        }
-                    }
-                    else -> {
-                        binding.layoutProgress.visibility = android.view.View.VISIBLE
-                        binding.tvProgressText.text = "Progress: $progress%"
+                // Check for existing work with the same unique name to avoid accidental duplicates
+                val existing = withContext(Dispatchers.IO) {
+                    try {
+                        wm.getWorkInfosForUniqueWork(RepackWorker.UNIQUE_WORK_PREFIX + cleanFileName).get()
+                    } catch (e: Exception) {
+                        emptyList()
                     }
                 }
-            })
+
+                val alreadyRunning = existing.any { !it.state.isFinished }
+                if (alreadyRunning) {
+                    // Attach UI to existing running job so user sees progress instead of silently ignoring
+                    val runningInfo = existing.firstOrNull { !it.state.isFinished }
+                    runningInfo?.let { wi ->
+                        wm.getWorkInfoByIdLiveData(wi.id).observe(this@RepackActivity, Observer { info ->
+                            if (info == null) return@Observer
+                            val progress = info.progress.getInt("progress", 0)
+                            when {
+                                info.state.isFinished -> {
+                                    binding.layoutProgress.visibility = android.view.View.GONE
+                                    binding.btnRepack.isEnabled = true
+                                    binding.btnRepack.text = getString(com.example.appcloner.R.string.clone_again)
+                                }
+                                else -> {
+                                    binding.layoutProgress.visibility = android.view.View.VISIBLE
+                                    binding.tvProgressText.text = "Progress: $progress%"
+                                }
+                            }
+                        })
+                    }
+
+                    com.example.appcloner.util.UiUtils.showSnack(binding.root, getString(com.example.appcloner.R.string.already_running_clone_job), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                    binding.btnRepack.isEnabled = true
+                    return@launch
+                }
+
+                val request = OneTimeWorkRequestBuilder<RepackWorker>()
+                    .setInputData(input)
+                    .addTag(RepackWorker.TAG_BASE)
+                    .addTag(RepackWorker.TAG_PREFIX + cleanFileName)
+                    .build()
+
+                wm.enqueueUniqueWork(RepackWorker.UNIQUE_WORK_PREFIX + cleanFileName, ExistingWorkPolicy.KEEP, request)
+
+                com.example.appcloner.util.UiUtils.showSnack(binding.root, getString(com.example.appcloner.R.string.clone_job_queued), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+
+                // Observe work progress and completion
+                wm.getWorkInfoByIdLiveData(request.id).observe(this@RepackActivity, Observer { info ->
+                    if (info == null) return@Observer
+                    val progress = info.progress.getInt("progress", 0)
+                    when {
+                        info.state.isFinished -> {
+                            binding.layoutProgress.visibility = android.view.View.GONE
+                                    binding.btnRepack.isEnabled = true
+                                    binding.btnRepack.text = getString(com.example.appcloner.R.string.clone_again)
+                            val output = info.outputData.getString(RepackWorker.KEY_OUTPUT_PATH)
+                            if (!output.isNullOrEmpty()) {
+                                // Show view downloads if custom URI provided
+                                if (!appSettings.customOutputFolderUri.isNullOrEmpty()) {
+                                    binding.btnViewDownloads.visibility = android.view.View.VISIBLE
+                                    binding.btnViewDownloads.setOnClickListener {
+                                        com.example.appcloner.util.UiUtils.openFolder(this@RepackActivity, appSettings.customOutputFolderUri, binding.root)
+                                    }
+                                }
+
+                                if (appSettings.installImmediately) {
+                                    // Try to open/install internal output file
+                                    val outFile = File(filesDir, "$cleanFileName.apk")
+                                    com.example.appcloner.util.UiUtils.openOutput(this@RepackActivity, outFile.absolutePath, appSettings.customOutputFolderUri, binding.root)
+                                }
+                            }
+                        }
+                        else -> {
+                            binding.layoutProgress.visibility = android.view.View.VISIBLE
+                            binding.tvProgressText.text = "Progress: $progress%"
+                        }
+                    }
+                })
+            }
+        }
+
+        binding.btnViewJobs.setOnClickListener {
+            startActivity(Intent(this, JobListActivity::class.java))
         }
     }
 
@@ -125,28 +178,17 @@ class RepackActivity : AppCompatActivity() {
         val cmd = "repack.ps1 -Input \"$apkPath\" -Out \"$suggestedOut\" -NewPackage com.example.clone -Label \"My Clone\" -Keystore <keystore.jks> -KeyAlias <alias> -StorePass <pass> -KeyPass <pass>"
         
         AlertDialog.Builder(this)
-            .setTitle("On-Device Repack Incomplete")
-            .setMessage("Reason: $reason\n\nTo fully restructure the APK, you must use a PC with proper Zipalign/Apktool support.")
-                .setPositiveButton("Copy PC Command") { _, _ ->
+            .setTitle(getString(com.example.appcloner.R.string.on_device_repack_incomplete))
+            .setMessage(getString(com.example.appcloner.R.string.desktop_repack_message, reason))
+                .setPositiveButton(getString(com.example.appcloner.R.string.copy_pc_command)) { _, _ ->
                 val clipboard = getSystemService(ClipboardManager::class.java)
                 val clip = ClipData.newPlainText("repack-cmd", cmd)
                 clipboard.setPrimaryClip(clip)
-                Snackbar.make(binding.root, "Command copied to clipboard", Snackbar.LENGTH_SHORT).show()
+                com.example.appcloner.util.UiUtils.showSnack(binding.root, getString(com.example.appcloner.R.string.command_copied), com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
             }
-            .setNegativeButton("Understood", null)
+            .setNegativeButton(getString(com.example.appcloner.R.string.understood), null)
             .show()
     }
 
-    private fun installApk(apkFile: File) {
-        try {
-            val authority = "${applicationContext.packageName}.provider"
-            val uri = androidx.core.content.FileProvider.getUriForFile(this, authority, apkFile)
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setDataAndType(uri, "application/vnd.android.package-archive")
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            startActivity(intent)
-        } catch (e: Exception) {
-            Snackbar.make(binding.root, "Failed to launch installer: ${e.message}", Snackbar.LENGTH_LONG).show()
-        }
-    }
+    // Installation / opening is handled by `UiUtils.openOutput` to avoid code duplication.
 }

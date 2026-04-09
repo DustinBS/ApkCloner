@@ -7,6 +7,7 @@ import android.view.View
 import androidx.core.content.FileProvider
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
+import com.example.appcloner.R
 
 object UiUtils {
     fun showSnack(anchor: View?, message: String, length: Int = Snackbar.LENGTH_SHORT) {
@@ -19,7 +20,7 @@ object UiUtils {
      */
     fun openOutput(context: Context, output: String?, fallbackFolderUri: String?, anchor: View? = null): Boolean {
         if (output.isNullOrEmpty()) {
-            showSnack(anchor, "No output available")
+            showSnack(anchor, context.getString(R.string.no_output_available))
             return false
         }
         try {
@@ -45,16 +46,15 @@ object UiUtils {
                         context.startActivity(folderIntent)
                         return true
                     }
-                    showSnack(anchor, "No app can view the output URI.")
+                    showSnack(anchor, context.getString(R.string.no_app_can_view_output))
                     return false
                 }
-
-                showSnack(anchor, "Cannot open cloned APK directly.")
+                showSnack(anchor, context.getString(R.string.cannot_open_cloned_apk))
                 return false
             } else {
                 val file = if (output.startsWith("file://")) File(Uri.parse(output).path!!) else File(output)
                 if (!file.exists()) {
-                    showSnack(anchor, "Output file not found.")
+                    showSnack(anchor, context.getString(R.string.output_file_not_found))
                     return false
                 }
                 val authority = "${context.packageName}.provider"
@@ -67,12 +67,12 @@ object UiUtils {
                     context.startActivity(intent)
                     return true
                 }
-                showSnack(anchor, "No app to open APK.")
+                showSnack(anchor, context.getString(R.string.no_app_to_open_apk))
                 return false
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            showSnack(anchor, "Cannot open output: ${e.message}")
+            showSnack(anchor, context.getString(R.string.cannot_open_output, e.message ?: ""))
             return false
         }
     }
@@ -82,7 +82,7 @@ object UiUtils {
      */
     fun openFolder(context: Context, folderUriString: String?, anchor: View? = null): Boolean {
         if (folderUriString.isNullOrEmpty()) {
-            showSnack(anchor, "No folder configured")
+            showSnack(anchor, context.getString(R.string.no_folder_configured))
             return false
         }
         try {
@@ -95,11 +95,11 @@ object UiUtils {
                 context.startActivity(folderIntent)
                 return true
             }
-            showSnack(anchor, "No app can view the configured folder.")
+            showSnack(anchor, context.getString(R.string.no_app_can_view_folder))
             return false
         } catch (e: Exception) {
             e.printStackTrace()
-            showSnack(anchor, "Cannot open folder: ${e.message}")
+            showSnack(anchor, context.getString(R.string.cannot_open_folder, e.message ?: ""))
             return false
         }
     }

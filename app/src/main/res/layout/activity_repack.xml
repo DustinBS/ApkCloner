@@ -11,12 +11,24 @@
         android:id="@+id/tvHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Selected APK Configuration"
+        android:text="@string/selected_apk_config"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/btnViewJobs"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_recent_history"
+        android:contentDescription="View Jobs"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardPath"
@@ -41,7 +53,7 @@
         android:id="@+id/tvTargetAppName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New App Name:"
+        android:text="@string/new_app_name_label"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -57,11 +69,11 @@
         android:layout_marginTop="8dp"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
             
-        <com.google.android.material.textfield.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etTargetAppName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Cloned App"
+            android:hint="@string/cloned_app_hint"
             android:textColor="?android:attr/textColorPrimary" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -69,7 +81,7 @@
         android:id="@+id/tvTargetPackage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Target Package Name:"
+        android:text="@string/new_target_package_label"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -85,11 +97,11 @@
         android:layout_marginTop="8dp"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
             
-        <com.google.android.material.textfield.TextInputEditText
+            <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etTargetPackage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="com.example.clone"
+            android:hint="@string/default_clone_package"
             android:textColor="?android:attr/textColorPrimary" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -116,7 +128,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Repack running in background — you may close the app. Return here to view progress."
+            android:text="@string/repack_running_msg"
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="12sp"
             android:textAlignment="center"/>
@@ -138,7 +150,7 @@
         android:id="@+id/btnRepack"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="Extract &amp; Clone"
+        android:text="@string/extract_clone"
         android:contentDescription="@string/clone_again"
         app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent"

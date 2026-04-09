@@ -3,8 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- Required on Android 11+ to enumerate installed packages for the app picker UI. -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Use package visibility queries for launchable apps instead of broad QUERY_ALL_PACKAGES. -->
+    <!-- This allows discovery of apps with LAUNCHER intent for the picker UI. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
     
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -29,6 +35,7 @@
         <activity android:name=".RepackActivity" />
         <activity android:name=".SettingsActivity" />
         <activity android:name=".CloneHistoryActivity" />
+        <activity android:name=".JobListActivity" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
