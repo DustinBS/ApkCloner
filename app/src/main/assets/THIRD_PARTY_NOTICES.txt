@@ -1,0 +1,16 @@
+Third-Party Notices
+
+This app bundles or references the following third-party components. Before distributing the application (especially the shaded `:dextools` artifact), include the full license texts required by each project and comply with any attribution obligations.
+
+- org.smali:smali — Apache License 2.0 — https://github.com/JesusFreke/smali/blob/master/LICENSE
+- com.android.tools.build:apksig — Apache License 2.0 — https://developer.android.com/studio/build/apksig
+- org.bouncycastle:bcpkix-jdk15to18 — Bouncy Castle License (see project) — https://www.bouncycastle.org/licence.html
+- com.github.REAndroid:ARSCLib — Apache License 2.0 — https://github.com/REAndroid/ARSCLib
+- androidx libraries (various) — see each artifact POM on Maven Central for license information
+
+Notes:
+- The `:dextools` module produces a shaded JAR that relocates packages to avoid Android classpath conflicts. When redistributing this shaded artifact, include the corresponding license texts for relocated dependencies as required by their licenses.
+- Debug-only helpers (fallback signing logic and `TestSmaliBridge`) are included only in debug/test variants and are not packaged into release builds.
+- For full license texts, consult each project's repository or Maven Central artifact POM and include the required NOTICE/attribution files where applicable.
+
+If you need, I can gather the full license text files for each dependency and add them under `legal/` in the repo.

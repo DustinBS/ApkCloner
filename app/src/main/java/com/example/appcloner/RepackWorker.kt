@@ -18,12 +18,17 @@ class RepackWorker(appContext: Context, params: WorkerParameters) : CoroutineWor
         const val KEY_CUSTOM_URI = "custom_uri"
         const val KEY_ORIGINAL_PACKAGE = "original_package"
         const val KEY_OUTPUT_PATH = "output_path"
+        const val KEY_DEEP_UNPACK = "deep_unpack"
+        const val KEY_WORKSPACE_PATH = "workspace_path"
+        const val KEY_AUTO_FIX = "auto_fix"
+        const val KEY_PROGRESS = "progress"
 
         private const val CHANNEL_ID = "appcloner_repack"
         private const val NOTIF_ID = 1001
         const val TAG_BASE = "repack"
         const val TAG_PREFIX = "repack:"
         const val UNIQUE_WORK_PREFIX = "repack_"
+        const val KEY_WARNINGS = "repack_warnings"
     }
 
     override suspend fun doWork(): Result {
@@ -42,6 +47,8 @@ class RepackWorker(appContext: Context, params: WorkerParameters) : CoroutineWor
         val targetAppName = inputData.getString(KEY_TARGET_APP_NAME)
         val customUri = inputData.getString(KEY_CUSTOM_URI)
         val originalPackage = inputData.getString(KEY_ORIGINAL_PACKAGE) ?: "unknown.package"
+        val deepUnpack = inputData.getBoolean(KEY_DEEP_UNPACK, false)
+        val autoFix = inputData.getBoolean(KEY_AUTO_FIX, false)
 
         // Setup a foreground notification so long-running repacks show progress in the shade
         NotificationUtils.createChannel(applicationContext, CHANNEL_ID, "AppCloner Repack")
@@ -60,20 +67,40 @@ class RepackWorker(appContext: Context, params: WorkerParameters) : CoroutineWor
 
         try {
             // Kick off progress and update notification throughout the operation
-            setProgress(workDataOf("progress" to 5))
+            setProgress(workDataOf(KEY_PROGRESS to 5))
             NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 5, "Starting")
 
             val filesDir = applicationContext.filesDir
-            val cleanFileName = (targetPackage ?: "cloned").replace(Regex("[^a-zA-Z0-9.\\-]"), "_")
+            val cleanFileName = RepackUtils.cleanFileName(targetPackage)
             val outFile = File(filesDir, "$cleanFileName.apk")
 
-            setProgress(workDataOf("progress" to 20))
+            setProgress(workDataOf(KEY_PROGRESS to 20))
             NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 20, "Preparing resources (20%)")
 
-            val success = RepackHelper.repack(apkPaths, outFile.absolutePath, targetPackage, targetAppName)
+            var workspacePath: String? = null
+            var workspaceWarnings = emptyList<String>()
+            if (deepUnpack) {
+                try {
+                    setProgress(workDataOf(KEY_PROGRESS to 10))
+                    NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 10, "Unpacking APK(s) for deep analysis")
+                    val workspaceDir = RepackUtils.deepUnpackDir(applicationContext, cleanFileName)
+                    if (workspaceDir.exists()) workspaceDir.deleteRecursively()
+                    workspaceDir.mkdirs()
+                    for (p in apkPaths) {
+                        try {
+                            RepackHelper.unpackApkToWorkspace(p, workspaceDir)
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+                    workspacePath = workspaceDir.absolutePath
+                    // quick workspace scan
+                    workspaceWarnings = try { RepackHelper.detectIssuesInWorkspace(workspaceDir, originalPackage) } catch (e: Exception) { emptyList() }
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+
+            val success = RepackHelper.repack(apkPaths, outFile.absolutePath, targetPackage, targetAppName, autoFix, workspacePath)
             if (!success) return Result.failure(workDataOf("error" to "repack_failed"))
 
-            setProgress(workDataOf("progress" to 75))
+            setProgress(workDataOf(KEY_PROGRESS to 75))
             NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 75, "Signing and finalizing (75%)")
 
             var finalPath = outFile.absolutePath
@@ -87,7 +114,24 @@ class RepackWorker(appContext: Context, params: WorkerParameters) : CoroutineWor
                 }
             }
 
-            // Save to history DB
+            // Note: history insertion is deferred until after analysis so we can persist warnings
+
+            setProgress(workDataOf(KEY_PROGRESS to 100))
+            NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 100, "Repack complete", finalText = "Saved to $finalPath", ongoing = false, smallIcon = android.R.drawable.stat_sys_download_done)
+
+            // Post-repack analysis: detect leftover references that may cause runtime crashes
+            val warnings = try {
+                RepackHelper.detectPotentialIssues(File(finalPath), originalPackage)
+            } catch (e: Exception) {
+                e.printStackTrace(); emptyList<String>()
+            }
+
+            // Merge workspace warnings (from deep unpack) and post-repack warnings
+            val mergedWarnings = mutableListOf<String>()
+            mergedWarnings.addAll(workspaceWarnings)
+            mergedWarnings.addAll(warnings)
+
+            // Persist history including warnings
             try {
                 val historyDao = AppDatabase.getDatabase(applicationContext).cloneHistoryDao()
                 historyDao.insert(
@@ -97,17 +141,24 @@ class RepackWorker(appContext: Context, params: WorkerParameters) : CoroutineWor
                         appName = targetAppName ?: "Cloned App",
                         cloneDate = System.currentTimeMillis(),
                         version = "1.0",
-                        outputPath = finalPath
+                        outputPath = finalPath,
+                        warnings = if (mergedWarnings.isNotEmpty()) mergedWarnings.joinToString("\n") else null
                     )
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
 
-            setProgress(workDataOf("progress" to 100))
-            NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 100, "Repack complete", finalText = "Saved to $finalPath", ongoing = false, smallIcon = android.R.drawable.stat_sys_download_done)
+            val baseOut = mutableMapOf<String, Any>(KEY_OUTPUT_PATH to finalPath)
+            if (!workspacePath.isNullOrEmpty()) baseOut[KEY_WORKSPACE_PATH] = workspacePath
+            val outData = if (mergedWarnings.isNotEmpty()) {
+                baseOut[KEY_WARNINGS] = mergedWarnings.joinToString("\n")
+                workDataOf(*baseOut.map { it.key to it.value.toString() }.toTypedArray())
+            } else {
+                workDataOf(*baseOut.map { it.key to it.value.toString() }.toTypedArray())
+            }
 
-            return Result.success(workDataOf(KEY_OUTPUT_PATH to finalPath))
+            return Result.success(outData)
         } catch (e: Exception) {
             e.printStackTrace()
             NotificationUtils.updateNotification(applicationContext, CHANNEL_ID, NOTIF_ID, 0, "Repack failed: ${e.message}", ongoing = false)

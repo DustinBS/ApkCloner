@@ -61,13 +61,11 @@ object NotificationUtils {
         }
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                if (!granted) return
-            }
+            // Attempt to post the notification; on Android 13+ this may throw SecurityException
+            // if the runtime `POST_NOTIFICATIONS` permission is not granted. Catch and ignore
+            // as callers already use UI fallbacks.
             NotificationManagerCompat.from(context).notify(notifId, notification)
         } catch (e: SecurityException) {
-            // Swallow: permission may be revoked at runtime. Calling code should handle visibility via UI.
             e.printStackTrace()
         }
     }

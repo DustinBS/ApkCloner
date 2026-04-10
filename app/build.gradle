@@ -50,6 +50,16 @@ dependencies {
     // BouncyCastle for cert generation
     implementation 'org.bouncycastle:bcpkix-jdk15to18:1.76'
 
+    // Use the shaded dextools output JAR to avoid project transform/jni issues.
+    implementation files("${rootDir}/dextools/build/libs/dextools-shaded-1.0-all.jar")
+
+
+// Ensure the shaded jar is built before Android pre-build tasks run
+gradle.projectsEvaluated {
+    tasks.matching { it.name == 'preBuild' }.configureEach {
+        dependsOn(':dextools:shadowJar')
+    }
+}
     // UI Dependencies
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'

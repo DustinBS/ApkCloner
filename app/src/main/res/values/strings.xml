@@ -37,4 +37,14 @@
     <string name="warning_modify_package">Warning: Modifying core package name may break apps relying on strict signatures.</string>
     <string name="on_device_repack_incomplete">On-Device Repack Incomplete</string>
     <string name="desktop_repack_message">Reason: %1$s\n\nTo fully restructure the APK, you must use a PC with proper Zipalign/Apktool support.</string>
+    <string name="clone_completed_with_warnings">Clone completed with warnings</string>
+    <string name="clone_warnings_details">Some potential issues were detected in the cloned APK. These can cause crashes when the app launches certain components. For best results run the desktop repack tool which performs a deeper smali-level rename.</string>
+    <string name="view_warnings">View details</string>
+    <string name="prepare_desktop_bundle">Prepare desktop bundle</string>
+    <string name="bundle_prepared">Desktop bundle prepared</string>
+    <string name="bundle_location">Bundle saved: %1$s</string>
+    <string name="prepare_bundle_failed">Failed to prepare bundle: %1$s</string>
+    <string name="deep_clone_label">Deep clone (unpack &amp; attempt fixes)</string>
+    <string name="deep_clone_helper">Perform a deep unpack to allow additional analysis and safe fixes. This may be slower.</string>
+    <string name="auto_fix_label">Apply safe fixes (set exported=false where safe)</string>
 </resources>

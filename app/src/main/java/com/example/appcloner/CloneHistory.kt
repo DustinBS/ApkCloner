@@ -11,5 +11,6 @@ data class CloneHistory(
     val appName: String,
     val cloneDate: Long,
     val version: String,
-    val outputPath: String
+    val outputPath: String,
+    val warnings: String? = null
 )

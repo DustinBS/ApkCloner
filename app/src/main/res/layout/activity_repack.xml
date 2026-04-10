@@ -105,6 +105,24 @@
             android:textColor="?android:attr/textColorPrimary" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchDeepUnpack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/deep_clone_label"
+        app:layout_constraintTop_toBottomOf="@id/layoutPackageName"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchAutoFix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/auto_fix_label"
+        app:layout_constraintTop_toBottomOf="@id/switchDeepUnpack"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <LinearLayout
         android:id="@+id/layoutProgress"
         android:layout_width="match_parent"

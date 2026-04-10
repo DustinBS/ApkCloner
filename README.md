@@ -62,3 +62,31 @@ gradle wrapper --gradle-version 8.2
 ```
 
 If you'd like, I can add a Gradle wrapper to this repository for CI-style runs (this requires adding the wrapper files).
+
+Additional developer notes (implemented by contributor agent)
+--------------------------------------------------------
+
+Dextools (smali/baksmali integration)
+- A lightweight Java subproject `:dextools` builds a shaded, relocated JAR (`dextools-shaded-1.0-all.jar`) that embeds `org.smali`/`baksmali` classes. The app depends on that shaded artifact via a local file dependency to avoid Android transform conflicts.
+- In the app, `RepackDexHelper` calls a bridge class reflectively to disassemble/reassemble dex files. A test-only stub bridge (`TestSmaliBridge`) is provided for unit tests so the CI run does not require native tooling.
+
+Unit tests and test harness
+- Unit tests were added and made self-contained; tests create temporary APK ZIP files and exercise `RepackHelper`, `RepackDexHelper`, and workspace detection logic. Run unit tests with Gradle:
+
+```powershell
+cd "$(pwd)"
+./gradlew.bat :app:testDebugUnitTest --no-daemon --console=plain
+```
+
+Integration / emulator validation (recommended)
+- The repository now includes a prototype on-device deep-unpack + auto-fix flow. To validate an end-to-end deep clone on an emulator or device, follow the steps in `docs/integration.md` which explain how to build, install, run the UI flow, and verify cloned APK behavior. For CI, create an instrumentation test or use `adb` to install and run smoke checks on an emulator image.
+
+Security & audit notes
+- The included embedded tooling (`:dextools` shaded JAR) currently depends only on `org.smali:smali`. The shaded JAR relocates packages to avoid classpath conflicts and excludes known annotation artifacts that can conflict with Android toolchain classes. See `docs/embedded_tools_audit.md` for a short audit checklist and mitigation notes (safety, licensing, and runtime surface).
+
+Next recommended steps
+- Run the integration validation on an emulator and exercise several real APKs (split APKs, apps using Firebase, apps with native libs) to collect and fix edge cases.
+- Harden the RepackHelper production path: gate test-only fallbacks behind a `debug` flag, and remove `TestSmaliBridge` from production builds.
+ - Harden the RepackHelper production path: test-only fallbacks have been moved into debug/test-only helpers (`DebugFallbacks`) invoked reflectively; `TestSmaliBridge` remains in `src/test` and will not be packaged in release builds.
+- Add CI steps to run unit tests and (optionally) instrumentation tests in an emulator job.
+

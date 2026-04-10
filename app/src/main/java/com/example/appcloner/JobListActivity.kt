@@ -47,7 +47,7 @@ class JobListActivity : AppCompatActivity() {
             val wi = items[position]
             val b = holder.binding
             val idShort = wi.id.toString().take(8)
-            val progress = wi.progress.getInt("progress", 0)
+            val progress = wi.progress.getInt(RepackWorker.KEY_PROGRESS, 0)
             val statusText = when {
                 wi.state.isFinished -> "Finished"
                 else -> "${wi.state.name} — $progress%"

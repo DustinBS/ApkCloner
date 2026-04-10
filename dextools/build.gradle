@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.example.appcloner'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.smali:smali:2.5.2'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+shadowJar {
+    archiveBaseName.set('dextools-shaded')
+    // Relocate to avoid classpath conflicts with Android app dependencies
+    relocate 'org.smali', 'com.example.appcloner.vendor.org.smali'
+    relocate 'org.jf', 'com.example.appcloner.vendor.org.jf'
+    relocate 'baksmali', 'com.example.appcloner.vendor.baksmali'
+    relocate 'smali', 'com.example.appcloner.vendor.smali'
+    relocate 'org.antlr', 'com.example.appcloner.vendor.org.antlr'
+    relocate 'com.google.common', 'com.example.appcloner.vendor.com.google.common'
+    // Exclude known annotation libs that duplicate Android toolchain classes
+    exclude 'com/google/errorprone/**'
+    exclude 'com/google/errorprone/annotations/**'
+    mergeServiceFiles()
+}
+
+tasks.named('jar') {
+    enabled = false
+}
+
+artifacts {
+    archives shadowJar
+}
